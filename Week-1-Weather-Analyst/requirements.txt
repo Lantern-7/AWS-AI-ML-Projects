@@ -1,6 +1,0 @@
-numpy
-pandas
-requests
-matplotlib
-scikit-learn
-google-genai
