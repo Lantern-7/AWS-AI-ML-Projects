@@ -106,12 +106,6 @@ python week2_semantic_search.py
 
 ## 👨‍💻 Author
 
-**Lantern-7**  
+**Ermiyas Getachew**  
 *AWS Student Builder Group — Addis Ababa Science and Technology University (AASTU)*  
 GitHub: [@Lantern-7](https://github.com/Lantern-7)
-
----
-
-<div align="center">
-  <sub>Built with ❤️ for the AWS Student Builder Group AI/ML community at AASTU.</sub>
-</div>
