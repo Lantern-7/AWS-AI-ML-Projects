@@ -115,6 +115,6 @@ python week3_spam_filter.py
 
 ## 👨‍💻 Author
 
-**Lantern-7**  
+**Ermiyas Getachew**  
 *AWS Student Builder Group — Addis Ababa Science and Technology University (AASTU)*  
 GitHub: [@Lantern-7](https://github.com/Lantern-7)
