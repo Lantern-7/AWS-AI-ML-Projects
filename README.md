@@ -4,6 +4,7 @@
 ### Addis Ababa Science and Technology University (AASTU)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![NumPy](https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
 [![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_DB-FF6F61?style=for-the-badge)](https://www.trychroma.com/)
@@ -23,7 +24,7 @@
 
 The **AWS Student Builder Group (AI/ML Track)** is an intensive, hands-on program designed to build strong foundations in machine learning engineering, vector databases, data pipelines, and cloud-native AI deployment.
 
-This repository tracks weekly milestone projects, transitioning from core data manipulation primitives to advanced retrieval systems (RAG) and cloud-ready architectures.
+This repository tracks weekly milestone projects, transitioning from core data manipulation primitives and classical statistical NLP to modern dense retrieval systems (RAG) and generative AI architectures.
 
 ---
 
@@ -33,6 +34,7 @@ This repository tracks weekly milestone projects, transitioning from core data m
 | :---: | :--- | :--- | :--- | :---: | :---: |
 | **01** | **[Data Processing Pipeline](./Week-1-Data-Processing)** | Data sanitization, type coercion, missing value imputation, NumPy vectorization & boolean masking | `Python`, `NumPy` | Completed | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/19q0XB9RUrdkSReAn6FGaWbdIBFoQIQ2W) |
 | **02** | **[Mini Semantic Search Engine](./Week-2%20Mini%20Semantic%20Search)** | Dense vector embeddings, ChromaDB, Cosine similarity, university FAQ semantic retrieval | `ChromaDB`, `Sentence-Transformers`, `Pandas` | Completed | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1RjCP4c_69brDS6ZIWp2UwKHAXX-7hrNg) |
+| **03** | **[Spam Detection & Classical ML](./Week-3%20Spam%20filter)** | TF-IDF tokenization, Multinomial Naive Bayes, adversarial evasion analysis, Bag-of-Words vs. LLMs | `scikit-learn`, `Pandas` | Completed | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Bm4YgGYSUNGivXSCsnoBLKibcOw5hNht) |
 
 ---
 
@@ -47,18 +49,24 @@ AWS-AI-ML-Projects/
 │   ├── README.md                            # Week 1 documentation
 │   ├── requirements.txt                     # Dependencies (numpy)
 │   ├── week1_data_processing.ipynb          # Interactive Colab notebook
-│   └── week1_data_processing.py             # Reproducible standalone script
+│   └── week1_data_processing.py             # Standalone Python script
 │
-└── Week-2 Mini Semantic Search/             # Week 2: Vector search engine
-    ├── README.md                            # Week 2 documentation
-    ├── requirements.txt                     # Dependencies (chromadb, sentence-transformers, pandas)
-    ├── week2_semantic_search.ipynb          # End-to-end orchestration notebook
-    ├── week2_semantic_search.py             # Standalone pipeline script
-    ├── Data/
-    │   └── aastu_faqs.csv                   # Raw AASTU University FAQ dataset
-    └── Src/
-        ├── data_loader.py                   # Data ingestion, cleaning, and text chunking
-        └── search_engine.py                 # ChromaDB wrapper for indexing and semantic query
+├── Week-2 Mini Semantic Search/             # Week 2: Vector search engine
+│   ├── README.md                            # Week 2 documentation
+│   ├── requirements.txt                     # Dependencies (chromadb, sentence-transformers, pandas)
+│   ├── week2_semantic_search.ipynb          # End-to-end orchestration notebook
+│   ├── week2_semantic_search.py             # Standalone pipeline script
+│   ├── Data/
+│   │   └── aastu_faqs.csv                   # Raw AASTU University FAQ dataset
+│   └── Src/
+│       ├── data_loader.py                   # Data ingestion, cleaning, and text chunking
+│       └── search_engine.py                 # ChromaDB wrapper for indexing and semantic query
+│
+└── Week-3 Spam filter/                      # Week 3: Classical ML & Adversarial Testing
+    ├── README.md                            # Week 3 documentation & vulnerability analysis
+    ├── requirements.txt                     # Dependencies (pandas, scikit-learn)
+    ├── week3_spam_filter.ipynb              # Interactive Colab notebook with benchmarks
+    └── week3_spam_filter.py                 # Standalone classification script
 ```
 
 ---
@@ -66,9 +74,10 @@ AWS-AI-ML-Projects/
 ## 🛠️ Technologies & Tools
 
 - **Core Language:** Python 3.10+
-- **Numerical & Data Processing:** NumPy, Pandas
+- **Machine Learning & Classical NLP:** scikit-learn (`TfidfVectorizer`, `MultinomialNB`, metrics)
 - **Vector Storage & Retrieval:** ChromaDB
 - **Embedding Models:** Sentence-Transformers (`all-MiniLM-L6-v2` via Hugging Face)
+- **Numerical & Data Processing:** NumPy, Pandas
 - **Environments:** Google Colab, Python `venv`
 
 ---
@@ -96,16 +105,16 @@ source .venv/bin/activate
 Each week is self-contained with its own dependencies and execution scripts. Navigate to the desired folder:
 
 ```bash
-# Example for Week 2
-cd "Week-2 Mini Semantic Search"
+# Example for Week 3
+cd "Week-3 Spam filter"
 pip install -r requirements.txt
-python week2_semantic_search.py
+python week3_spam_filter.py
 ```
 
 ---
 
 ## 👨‍💻 Author
 
-**Ermiyas Getachew**  
+**Lantern-7**  
 *AWS Student Builder Group — Addis Ababa Science and Technology University (AASTU)*  
 GitHub: [@Lantern-7](https://github.com/Lantern-7)

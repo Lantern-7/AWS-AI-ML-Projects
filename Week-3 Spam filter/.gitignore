@@ -1,0 +1,22 @@
+# Python Virtual Environments
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Colab specific
+/config/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Data files (Optional: uncomment the next line if you have massive CSVs you don't want to upload)
+# *.csv
