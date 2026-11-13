@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+
+# Vector index cache
+*.pkl
+*.npy
+vector_cache/
