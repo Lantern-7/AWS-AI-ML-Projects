@@ -11,8 +11,6 @@
 
 An end-to-end, production-grade **Retrieval-Augmented Generation (RAG)** system built to answer questions regarding official university academic handbooks, grading policies, graduation criteria, and dismissal appeal processes. It features sliding-window chunking, vector semantic search, externalized prompts, strict **Pydantic schema validation**, and an automated regression test suite.
 
-Developed as part of the **AWS AI & Machine Learning Mentorship Program (Week 4 & 5)**.
-
 ---
 
 ## 🏛️ System Architecture
@@ -116,7 +114,7 @@ For step-by-step exploration, open `week4_Building_small_AI_app.ipynb` directly 
 
 ## 🎯 Prompt Engineering Choices
 
-Following production AI best practices (Slide 5 & 13), prompt templates are **externalized in `prompts/system_prompt.txt`** rather than hardcoded in application logic.
+Following production AI best practices, prompt templates are **externalized in `prompts/system_prompt.txt`** rather than hardcoded in application logic.
 
 ### Design Principles:
 1. **Persona Framing**: Guides the model as the *Official AASTU Academic Advisor*, enforcing an objective, helpful tone.
@@ -174,7 +172,7 @@ Following production AI best practices (Slide 5 & 13), prompt templates are **ex
 
 ## 📊 Automated Evaluation Suite & Scorecard
 
-Per **Slide 10 & 14**, evaluation is essential for tracking regression and ensuring reliability. We implemented an automated evaluation runner (`eval/run_eval.py`) that evaluates our RAG engine against `eval/golden_dataset.json`.
+Evaluation is essential for tracking regression and ensuring reliability. We implemented an automated evaluation runner (`eval/run_eval.py`) that evaluates our RAG engine against `eval/golden_dataset.json`.
 
 ### Run Automated Evals:
 ```bash
