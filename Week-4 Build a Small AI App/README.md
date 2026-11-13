@@ -1,42 +1,46 @@
 # 🎓 AASTU Academic AI Advisor (Production RAG Prototype)
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render.com-brightgreen?style=for-the-badge&logo=render)](https://aastu-academic-advisor.onrender.com)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Gemini API](https://img.shields.io/badge/Google%20Gemini-Flash%20%26%20Embeddings-orange.svg)](https://aistudio.google.com/)
 [![Pydantic v2](https://img.shields.io/badge/Validation-Pydantic%20v2-green.svg)](https://docs.pydantic.dev/)
 [![Evaluation Pass](https://img.shields.io/badge/Golden%20Tests-100%25%20Passing-brightgreen.svg)]()
 
-An end-to-end, production-grade **Retrieval-Augmented Generation (RAG)** application built to assist students at **Addis Ababa Science and Technology University (AASTU)**. It queries official university handbooks, academic regulations, and campus guidelines to deliver factual, grounded answers with verifiable page citations and strict JSON schema validation.
+> 🌐 **Public Live Website:** [https://aastu-academic-advisor.onrender.com](https://aastu-academic-advisor.onrender.com)  
+> *Available online for all Addis Ababa Science and Technology University (AASTU) students.*
+
+An end-to-end, production-grade **Retrieval-Augmented Generation (RAG)** system built to answer questions regarding official university academic handbooks, grading policies, graduation criteria, and dismissal appeal processes. It features sliding-window chunking, vector semantic search, externalized prompts, strict **Pydantic schema validation**, and an automated regression test suite.
+
+Developed as part of the **AWS AI & Machine Learning Mentorship Program (Week 4 & 5)**.
 
 ---
 
 ## 🏛️ System Architecture
 
-The application strictly follows modern software engineering principles and production RAG design patterns:
-
-```mermaid
-flowchart TD
-    User["Student Query\n('What is the minimum CGPA?')"] --> WebUI["Web UI / CLI Interface\n(app.py)"]
-    
-    subgraph S1 ["1. RETRIEVE"]
-        WebUI --> EmbedQuery["Embed Query\n(gemini-embedding-001)"]
-        EmbedQuery --> VectorDB["Vector Store & Cosine Similarity\n(src/vector_store.py)"]
-        VectorDB --> TopK["Fetch Top-K Handbook Excerpts\n(Page numbers & chunk IDs)"]
-    end
-    
-    subgraph S2 ["2. AUGMENT"]
-        TopK --> PromptAssembler["Prompt Assembler\n(prompts/system_prompt.txt)"]
-        PromptAssembler --> Inject["Inject Grounded Context +\nJSON Schema Contract"]
-    end
-    
-    subgraph S3 ["3. GENERATE & VALIDATE"]
-        Inject --> LLM["LLM Generation\n(gemini-flash-lite-latest)"]
-        LLM --> Validator{"Pydantic Schema\nValidation Check"}
-        Validator -->|Pass| ValidJSON["Validated RAGResponse\n(Answer, Citations, Confidence)"]
-        Validator -->|Fail| RepairLoop["Automated Repair Loop\n(Max 2 retries with errors)"]
-        RepairLoop --> LLM
-    end
-    
-    ValidJSON --> WebUI
+```text
+[ 1. USER INTERFACE ]
+  Student Query: "What is the minimum CGPA?"
+       │
+       ▼  (app.py / Web UI / CLI)
+[ 2. RETRIEVE ]
+  ├── Convert question to 3072-dim vector via Gemini Embeddings
+  ├── Calculate Cosine Similarity across cached handbook chunks
+  └── Retrieve Top-3 most relevant handbook excerpts (Page 42, 45, etc.)
+       │
+       ▼
+[ 3. AUGMENT ]
+  ├── Load prompt template from prompts/system_prompt.txt
+  └── Inject retrieved excerpts + strict Pydantic JSON schema
+       │
+       ▼
+[ 4. GENERATE & VALIDATE ]
+  ├── Gemini Flash generates structured JSON response
+  ├── Pydantic validates: answer, citations, confidence_score, is_grounded
+  └── Automated Repair Loop: retries with error logs if JSON is malformed
+       │
+       ▼
+[ 5. VERIFIED RESPONSE ]
+  Student receives: Answer + Grounded Badge + Page Citations
 ```
 
 ---
@@ -46,76 +50,79 @@ flowchart TD
 ```text
 Week-4 Build a Small AI App/
 ├── App/
-│   └── app.py                      # Application runner (Web server & CLI mode)
+│   └── app.py                            # Production web server & interactive CLI
 ├── Data/
-│   └── AASTU Student Academic Handbook.pdf  # Knowledge base document
+│   └── AASTU Student Academic Handbook.pdf # Official university knowledge base
 ├── eval/
-│   ├── golden_dataset.json         # Automated regression test suite
-│   └── run_eval.py                 # Evaluation runner & scoring engine
+│   ├── golden_dataset.json               # Curated regression test suite
+│   └── run_eval.py                       # Automated evaluation runner & scorecard
 ├── prompts/
-│   └── system_prompt.txt           # Externalized prompt template & JSON contract
+│   └── system_prompt.txt                 # Externalized prompt template & JSON schema
 ├── src/
-│   ├── document_loader.py          # PDF parser & sliding-window text chunker
-│   ├── vector_store.py             # Vector embeddings, cosine similarity, & disk cache
-│   └── rag_engine.py               # Complete RAG pipeline with Pydantic validation
+│   ├── document_loader.py                # PDF parser & sliding-window chunker
+│   ├── vector_store.py                   # Embedding generation, similarity & disk cache
+│   └── rag_engine.py                     # Full RAG pipeline with Pydantic repair loop
 ├── web/
-│   ├── index.html                  # Responsive single-page web UI
-│   └── logo.png                    # Official AASTU crest & favicon
-├── .env.example                    # Template for required environment variables
-├── .gitignore                      # Prevents secrets and cache leaks
-├── README.md                       # Comprehensive project documentation
-└── requirements.txt                # Reproducible dependencies
+│   ├── index.html                        # AASTU-branded single-page application UI
+│   └── logo.png                          # Official AASTU university crest & favicon
+├── week4_Building_small_AI_app.ipynb     # Interactive Google Colab development notebook
+├── week4_Building_small_AI_app.py        # Exported experimental development script
+├── .env.example                          # Environment variable configuration template
+├── .gitignore                            # Secret & vector cache protection
+├── README.md                             # Comprehensive project documentation
+└── requirements.txt                      # Project dependencies
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started & Local Setup
 
 ### 1. Prerequisites
-* Python 3.10, 3.11, 3.12, 3.13, or 3.14
-* Free Google Gemini API Key from [Google AI Studio](https://aistudio.google.com/)
+* Python 3.10+ (tested up to Python 3.14)
+* A free Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
 ### 2. Installation
-Clone the repository and install the dependencies:
 ```bash
-git clone https://github.com/<YOUR-USERNAME>/<YOUR-REPO-NAME>.git
-cd "Week-4 Build a Small AI App"
+git clone https://github.com/Lantern-7/AWS-AI-ML-Projects.git
+cd "AWS-AI-ML-Projects/Week-4 Build a Small AI App"
 pip install -r requirements.txt
 ```
 
-### 3. Configure API Key
-Create a `.env` file in the project root based on `.env.example`:
+### 3. Environment Variables
+Create your local `.env` file from the provided template:
 ```bash
 cp .env.example .env
 ```
-Open `.env` and add your private key:
+Inside `.env`, insert your API key:
 ```ini
-GEMINI_API_KEY=AIzaSyYourActualGeminiKeyHere
+GEMINI_API_KEY=AIzaSyYourActualKeyHere
 ```
 
-### 4. Running the Web Application
-Launch the single-page web UI:
+### 4. Running the Local Web App
 ```bash
 python app.py
 ```
-Your browser will automatically open to `http://localhost:8000`.
+* Your default browser will automatically open to `http://localhost:8000`.
 
-### 5. Running in Interactive Terminal Mode
-For a headless CLI experience:
+### 5. Running in Interactive CLI Mode
 ```bash
 python app.py --cli
 ```
+
+### 6. Interactive Google Colab Notebook
+For step-by-step exploration, open `week4_Building_small_AI_app.ipynb` directly in Google Colab. It guides you through installing `pypdf`, uploading the handbook, inspecting vector distances, and testing individual RAG pipeline queries.
 
 ---
 
 ## 🎯 Prompt Engineering Choices
 
-Per the curriculum guidelines, prompt templates are **externalized in `prompts/system_prompt.txt`** rather than hardcoded in Python strings.
+Following production AI best practices (Slide 5 & 13), prompt templates are **externalized in `prompts/system_prompt.txt`** rather than hardcoded in application logic.
 
-### Key Prompt Design Decisions:
-1. **Persona Framing**: Primes the model as an *Official AASTU Academic Advisor*, adopting a formal, factual, and supportive tone.
-2. **Grounding Constraint**: Explicitly restricts the model to the provided context. If facts are absent, it is instructed to output: `"I cannot find this information in the official AASTU handbook."`
-3. **Structured Output Contract**: Forces the model to emit clean JSON conforming to our Pydantic schema:
+### Design Principles:
+1. **Persona Framing**: Guides the model as the *Official AASTU Academic Advisor*, enforcing an objective, helpful tone.
+2. **Grounding & Abstention Constraint**: Explicitly restricts answers to provided handbook excerpts. If the information is not present, the model must abstain:
+   > *"I cannot find this information in the official AASTU handbook."*
+3. **Structured Output Contract**: Binds generation to a strict Pydantic JSON schema:
    ```json
    {
      "answer": "string",
@@ -124,20 +131,25 @@ Per the curriculum guidelines, prompt templates are **externalized in `prompts/s
      "is_grounded": true
    }
    ```
-4. **Delimited Context**: Uses explicit section delimiters (`--- CONTEXT EXCERPTS ---`) to prevent prompt injection and avoid confusing instructions with user data.
+4. **Delimited Context Blocks**: Separates system instructions from retrieved text using clear section boundaries (`--- CONTEXT EXCERPTS ---`) to guard against prompt injection.
 
 ### Example Outputs:
 
-#### ✅ Example 1: In-Scope Grounded Query
-* **User Input**: *"What is the minimum CGPA for good academic standing?"*
-* **RAG Output**:
+#### ✅ Example 1: In-Scope Query (Grounded with Citations)
+* **Student Question**: *"What is the minimum CGPA for good academic standing, and can I appeal if dismissed?"*
+* **RAG Response**:
   ```json
   {
-    "answer": "To remain in good academic standing, a student must maintain a minimum Cumulative Grade Point Average (CGPA) of 2.00.",
+    "answer": "To remain in good academic standing, a student must maintain a minimum Cumulative Grade Point Average (CGPA) of 2.00. If subject to academic dismissal, a student may submit an appeal letter to the Academic Standards Committee within 10 working days of grade announcement.",
     "citations": [
       {
         "chunk_id": "chunk_policy_1",
         "page_number": 42,
+        "source": "AASTU Handbook"
+      },
+      {
+        "chunk_id": "chunk_policy_2",
+        "page_number": 45,
         "source": "AASTU Handbook"
       }
     ],
@@ -147,8 +159,8 @@ Per the curriculum guidelines, prompt templates are **externalized in `prompts/s
   ```
 
 #### 🛡️ Example 2: Out-of-Scope / Adversarial Query (Hallucination Defense)
-* **User Input**: *"What is the secret recipe for the campus cafeteria's special burger sauce?"*
-* **RAG Output**:
+* **Student Question**: *"What is the secret recipe for the campus cafeteria's special burger sauce?"*
+* **RAG Response**:
   ```json
   {
     "answer": "I cannot find this information in the official AASTU handbook.",
@@ -160,44 +172,44 @@ Per the curriculum guidelines, prompt templates are **externalized in `prompts/s
 
 ---
 
-## 📊 Automated Evaluation & Quality Benchmarks
+## 📊 Automated Evaluation Suite & Scorecard
 
-To ensure changes to prompts, chunk sizes, or models do not degrade performance, we implemented an automated regression test suite (`eval/run_eval.py`) backed by a curated Golden Dataset (`eval/golden_dataset.json`).
+Per **Slide 10 & 14**, evaluation is essential for tracking regression and ensuring reliability. We implemented an automated evaluation runner (`eval/run_eval.py`) that evaluates our RAG engine against `eval/golden_dataset.json`.
 
-### Running the Test Suite:
+### Run Automated Evals:
 ```bash
 python eval/run_eval.py
 ```
 
-### Evaluation Scorecard Results:
+### Final Scorecard Results:
 
-| Metric | Measured Value | Minimum Quality Bar | Status |
+| Benchmark Metric | Target Threshold | Measured Score | Status |
 | :--- | :---: | :---: | :---: |
-| **Total Test Cases** | 4 | - | - |
-| **Passed Tests** | 4 / 4 | $\ge 75\%$ | **PASSED** |
-| **Overall Accuracy** | **100.0%** | $\ge 75\%$ | **PASSED** |
-| **Schema Conformance** | **100.0%** | $100\%$ | **PASSED** |
-| **Retrieval Hit-Rate** | **100.0%** | $\ge 80\%$ | **PASSED** |
-| **Hallucination Resistance** | **100.0%** | $100\%$ | **PASSED** |
+| **Total Test Cases** | 4 | 4 | Complete |
+| **Passed Tests** | $\ge 75\%$ | **4 / 4 (100.0%)** | **PASSED** |
+| **Overall Accuracy** | $\ge 75\%$ | **100.0%** | **PASSED** |
+| **Pydantic Schema Conformance** | $100\%$ | **100.0%** | **PASSED** |
+| **Retrieval Hit-Rate** | $\ge 80\%$ | **100.0%** | **PASSED** |
+| **Hallucination Resistance** | $100\%$ | **100.0%** | **PASSED** |
 
 ---
 
-## 🛡️ Responsible AI, Safety, & Data Handling
+## 🛡️ Responsible AI, Safety, & Privacy
 
-1. **Hallucination Prevention**: Answers are bound to non-parametric external documents. If the knowledge base does not contain the answer, the model acknowledges its lack of knowledge rather than fabricating rules.
-2. **Prompt Injection Mitigation**: System instructions are strictly decoupled from retrieved content using delimiters. User input is sanitized before passing to downstream API calls.
-3. **Privacy by Design**: No student names, ID numbers, or personal identifying information (PII) are transmitted or logged. API keys are strictly loaded via `.env` and excluded from git history.
-4. **Traceability & Citations**: Every claim made by the assistant is accompanied by the exact page number and chunk ID from the official handbook.
+* **Hallucination Prevention**: Non-parametric retrieval grounds all factual claims. The model abstains rather than inventing policies.
+* **Prompt Injection Mitigation**: Retrieved handbook text is delimited and treated purely as passive data, preventing instruction overrides.
+* **Privacy & Least Privilege**: No student identity or credentials are stored or transmitted. The API key is loaded strictly through environment variables.
+* **Source Transparency**: Every answer includes page numbers and chunk identifiers, allowing students to verify claims in their physical handbooks.
 
 ---
 
-## 🔮 Future Improvements (Week 5 Production RAG Roadmap)
-* [ ] **Hybrid Search**: Combine dense vector retrieval with lexical BM25 keyword matching for exact policy numbers.
-* [ ] **Cross-Encoder Reranking**: Add a two-stage retrieval pipeline using a cross-encoder to re-sort the top 20 chunks into the top 3.
-* [ ] **AWS Deployment**: Package the container into AWS ECS / App Runner with an Amazon Bedrock foundation model backend.
+## 🔮 Future Roadmap (Week 5 Production RAG)
+* [ ] **Hybrid Search**: Combine dense vector retrieval with BM25 keyword matching for exact numerical policy lookups.
+* [ ] **Cross-Encoder Reranking**: Implement a second-stage reranker to score candidate passages before prompt injection.
+* [ ] **AWS Cloud Deployment**: Migrate backend to AWS App Runner / Amazon Bedrock.
 
 ---
 
 ## 👨‍💻 Author
-Ermiyas Getachew
+**Ermiyas Getachew**  
 Addis Ababa Science and Technology University (AASTU)
