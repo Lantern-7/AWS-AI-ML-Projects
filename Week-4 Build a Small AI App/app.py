@@ -142,25 +142,29 @@ class RAGHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
 
-def run_web(engine: RAGEngine, port: int = 8000) -> None:
-    """Launches the HTTP web server and opens the browser."""
+def run_web(engine: RAGEngine, port: int = None) -> None:
+    """Launches the HTTP web server and binds to public host for deployment."""
+    # Read PORT from cloud environment (Render/AWS) or default to 8000
+    server_port = port or int(os.environ.get("PORT", 8000))
+    host = "0.0.0.0"  # Allows incoming traffic from the internet
+
     RAGHTTPRequestHandler.engine = engine
-    server_address = ("127.0.0.1", port)
+    server_address = (host, server_port)
     httpd = HTTPServer(server_address, RAGHTTPRequestHandler)
 
-    url = f"http://localhost:{port}"
+    url = f"http://localhost:{server_port}"
     print("=" * 65)
-    print(f"  AASTU ACADEMIC AI ADVISOR - WEB SERVER ONLINE")
-    print(f"  Access URL: {url}")
-    print("  Press Ctrl+C in this terminal to stop the server.")
+    print(f"  AASTU ACADEMIC AI ADVISOR - SERVER ONLINE")
+    print(f"  Listening on: {host}:{server_port}")
     print("=" * 65)
 
-    webbrowser.open(url)
+    # Only open browser if running locally on desktop
+    if "PORT" not in os.environ:
+        webbrowser.open(url)
 
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nStopping server...")
         httpd.server_close()
         print("Server stopped cleanly.")
 
