@@ -213,3 +213,9 @@ python eval/run_eval.py
 ## 👨‍💻 Author
 **Ermiyas Getachew**  
 Addis Ababa Science and Technology University (AASTU)
+
+---
+
+<div align="center">
+  <a href="../Week-3%20Spam%20filter">⬅️ Go to Week 3: Spam Detection</a> • <a href="../">Return to Main Repository 🏠</a>
+</div>
