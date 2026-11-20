@@ -254,7 +254,13 @@
         });
         const data = await response.json();
 
-        document.getElementById('answerText').innerText = data.answer;
+        // Render markdown line breaks and bolding cleanly
+        let formatted = data.answer
+          .replace(/\n\n/g, '<br><br>')
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        document.getElementById('answerText').innerHTML = formatted;
         document.getElementById('confidenceText').innerText = `Confidence: ${(data.confidence_score * 100).toFixed(0)}%`;
         
         const badge = document.getElementById('groundedBadge');

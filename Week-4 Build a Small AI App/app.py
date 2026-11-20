@@ -126,7 +126,7 @@ class RAGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     return
 
                 # Execute RAG query
-                response: RAGResponse = self.engine.query(question, top_k=3)
+                response: RAGResponse = self.engine.query(question, top_k=5)
                 self._send_json(response.model_dump())
 
             except Exception as e:
