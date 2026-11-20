@@ -5,6 +5,7 @@ and caches vectors locally for fast, repeatable retrieval.
 """
 
 import os
+import sys
 import math
 import json
 import time
@@ -30,9 +31,10 @@ def get_gemini_api_key() -> str:
     # 2. Try python-dotenv for local development
     try:
         from dotenv import load_dotenv
-        # Try current dir and parent dir for .env
         load_dotenv()
-        load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+        script_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in locals() else "."
+        load_dotenv(os.path.join(script_dir, "..", ".env"))
+        load_dotenv(os.path.join(script_dir, ".env"))
     except Exception:
         pass
 
@@ -74,24 +76,34 @@ class SimpleVectorStore:
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:
             result = json.loads(resp.read().decode("utf-8"))
             return result["embedding"]["values"]
 
-    def add_chunks(self, chunks: List[Dict[str, Any]], batch_size: int = 20) -> None:
+    def add_chunks(self, chunks: List[Dict[str, Any]], batch_size: int = 25, cache_path: str = None) -> None:
         """
-        Embeds multiple text chunks using batchEmbedContents and stores them.
+        Embeds multiple text chunks using batchEmbedContents with automated
+        network retry and incremental progress saving.
         """
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"gemini-embedding-001:batchEmbedContents?key={self.api_key}"
         )
 
-        total = len(chunks)
-        print(f"Embedding {total} chunks in batches of {batch_size}...")
+        # Check existing chunks to resume if interrupted
+        existing_ids = {e["chunk_id"] for e in self.entries}
+        remaining_chunks = [c for c in chunks if c["chunk_id"] not in existing_ids]
 
-        for i in range(0, total, batch_size):
-            batch = chunks[i:i + batch_size]
+        total = len(chunks)
+        start_idx = total - len(remaining_chunks)
+
+        if start_idx > 0:
+            print(f"Resuming from chunk {start_idx}/{total} (already in database)...")
+
+        for i in range(0, len(remaining_chunks), batch_size):
+            batch = remaining_chunks[i:i + batch_size]
+            current_count = start_idx + i + len(batch)
+
             requests = [
                 {
                     "model": "models/gemini-embedding-001",
@@ -102,30 +114,47 @@ class SimpleVectorStore:
             data = json.dumps({"requests": requests}).encode("utf-8")
             req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
-            try:
-                with urllib.request.urlopen(req) as resp:
-                    res = json.loads(resp.read().decode("utf-8"))
-                    embeddings = res.get("embeddings", [])
-                    for chunk, emb in zip(batch, embeddings):
-                        self.entries.append({
-                            "chunk_id": chunk["chunk_id"],
-                            "page_number": chunk["page_number"],
-                            "source": chunk.get("source", "AASTU Handbook"),
-                            "text": chunk["text"],
-                            "vector": emb["values"]
-                        })
-                print(f"  Processed {min(i + batch_size, total)}/{total} chunks...")
-                time.sleep(0.5)  # Respect free API rate limits
-            except urllib.error.HTTPError as e:
-                print(f"  [Warning] HTTP Error {e.code}: {e.reason}. Retrying batch...")
-                time.sleep(2)
+            # Retry loop: attempt up to 3 times per batch on network drops
+            success = False
+            for attempt in range(1, 4):
+                try:
+                    with urllib.request.urlopen(req, timeout=30) as resp:
+                        res = json.loads(resp.read().decode("utf-8"))
+                        embeddings = res.get("embeddings", [])
+                        for chunk, emb in zip(batch, embeddings):
+                            self.entries.append({
+                                "chunk_id": chunk["chunk_id"],
+                                "page_number": chunk["page_number"],
+                                "source": chunk.get("source", "AASTU Handbook"),
+                                "text": chunk["text"],
+                                "vector": emb["values"]
+                            })
+                    success = True
+                    print(f"  Processed {current_count}/{total} chunks...")
+                    break
+                except Exception as e:
+                    wait_time = 12 if "HTTPError" in str(type(e).__name__) else 4
+                    print(f"  [Attempt {attempt}/3] Rate limit / network pause ({type(e).__name__}). Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+
+            if not success:
+                print(f"  [Error] Failed batch at chunk {current_count}. Saving current progress...")
+                if cache_path:
+                    self.save_cache(cache_path)
+                raise RuntimeError(f"Network failed after 3 retries at chunk {current_count}")
+
+            # Save checkpoint every 100 chunks
+            if cache_path and (current_count % 100 == 0 or current_count == total):
+                self.save_cache(cache_path)
+
+            time.sleep(1.2)  # Respect free API rate limits
 
     def save_cache(self, file_path: str) -> None:
         """Saves stored vectors and metadata to disk."""
         os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(self.entries, f)
-        print(f"[OK] Cached {len(self.entries)} vector entries to: {file_path}")
+        print(f"[OK] Saved {len(self.entries)} vector entries to: {file_path}")
 
     def load_cache(self, file_path: str) -> bool:
         """Loads vectors from disk cache if the file exists."""
@@ -138,7 +167,7 @@ class SimpleVectorStore:
 
     def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """
-        Searches the stored chunks and returns the top-k most semantically relevant.
+        Searches stored chunks and returns the top-k most semantically relevant.
         """
         if not self.entries:
             raise ValueError("Vector store is empty! Add chunks or load from cache first.")
@@ -162,47 +191,6 @@ class SimpleVectorStore:
 
 
 if __name__ == "__main__":
-    # Self-test block: Embed a sample of chunks and run a test query
-    print("=== Testing Vector Store & Semantic Search ===")
-    
-    # Locate cache directory
-    script_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in locals() else "."
-    cache_path = os.path.join(script_dir, "vector_cache", "sample_embeddings.json")
-    
+    print("=== Testing Vector Store ===")
     store = SimpleVectorStore()
-    
-    # Try loading existing cache first
-    if not store.load_cache(cache_path):
-        print("No cache found. Simulating with 3 distinct test chunks...")
-        sample_chunks = [
-            {
-                "chunk_id": "chunk_academic_1",
-                "page_number": 42,
-                "source": "AASTU Handbook",
-                "text": "Academic Standing: A student must maintain a minimum Cumulative Grade Point Average (CGPA) of 2.00 to remain in good standing. Failure to do so leads to academic probation."
-            },
-            {
-                "chunk_id": "chunk_library_1",
-                "page_number": 88,
-                "source": "AASTU Handbook",
-                "text": "Library Services: The university library opens at 8:00 AM and closes at 10:00 PM on weekdays. Valid student ID card is mandatory for entry."
-            },
-            {
-                "chunk_id": "chunk_sports_1",
-                "page_number": 115,
-                "source": "AASTU Handbook",
-                "text": "Campus Recreation: The university gymnasium and sports fields are open for all registered undergraduate students during scheduled athletic hours."
-            }
-        ]
-        store.add_chunks(sample_chunks, batch_size=10)
-        store.save_cache(cache_path)
-
-    # Test Query: Student asking about minimum CGPA
-    test_query = "What is the minimum CGPA required for good academic standing?"
-    print(f"\nQuery: '{test_query}'")
-    results = store.search(test_query, top_k=2)
-
-    print("\n--- Search Results (Top Matches) ---")
-    for rank, r in enumerate(results, 1):
-        print(f"\n#{rank} [Score: {r['similarity_score']}] (Page {r['page_number']})")
-        print(f"Excerpt: {r['text'][:140]}...")
+    print("Vector Store initialized successfully!")
