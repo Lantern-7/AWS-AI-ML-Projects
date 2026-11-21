@@ -1,0 +1,31 @@
+# Security: Never commit API keys or environment secrets
+.env
+*.env
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter / Colab Checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE Settings
+.vscode/
+.idea/
+
+# Keep the outputs directory in Git, but don't clutter with temporary test files (optional)
+outputs/*.md
