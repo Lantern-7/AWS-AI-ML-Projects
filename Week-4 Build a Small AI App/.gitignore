@@ -10,4 +10,5 @@ __pycache__/
 # Vector index cache
 *.pkl
 *.npy
-vector_cache/
+# Allow the handbook vector database to be uploaded
+!src/vector_cache/handbook_embeddings.json
